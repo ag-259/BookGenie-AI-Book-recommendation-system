@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - BookGenie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .dark-mode {
+            background: linear-gradient(135deg, #1e293b 0%, #4c1d95 50%, #1e293b 100%);
+        }
+        .light-mode {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 50%, #fce7f3 100%);
+        }
+        .glass-dark {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glass-light {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .stat-card {
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .animate-fade-in-up {
+            animation: fadeInUp 0.6s ease-out forwards;
+        }
+        
+        .animate-delay-1 { animation-delay: 0.1s; opacity: 0; }
+        .animate-delay-2 { animation-delay: 0.2s; opacity: 0; }
+        .animate-delay-3 { animation-delay: 0.3s; opacity: 0; }
+        .animate-delay-4 { animation-delay: 0.4s; opacity: 0; }
+        
+        .progress-ring {
+            transition: stroke-dashoffset 0.5s ease;
+        }
+        
+        .tab-button {
+            transition: all 0.3s ease;
+        }
+        .tab-button.active {
+            background: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body class="dark-mode min-h-screen transition-all duration-300">
+
+    <!-- Theme Toggle -->
+    <button id="themeToggle" class="fixed top-6 right-6 z-50 p-3 rounded-full glass-dark hover:scale-110 transition-transform shadow-lg">
+        <svg id="sunIcon" class="w-6 h-6 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+        <svg id="moonIcon" class="w-6 h-6 text-purple-900 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+    </button>
+
+    <!-- Navbar -->
+    <!-- ─── NAVBAR ─── -->
+<nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 px-6 py-4 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold hover:text-purple-300 transition">✨ BookGenie</a>
+        
+        <div class="flex gap-6 items-center">
+            <a href="/genie"         class="text-gray-300 hover:text-white transition">Genie</a>
+            <a href="/ask"           class="text-gray-300 hover:text-white transition">Ask AI</a>
+            <a href="/liked"         class="text-gray-300 hover:text-white transition">Liked</a>
+            
+            <!-- Dropdown for reading statuses -->
+            <div class="relative group">
+                <button class="text-gray-300 hover:text-white transition flex items-center gap-1">
+                    My Books
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                
+                <!-- Dropdown menu -->
+                <div class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <a href="/want-to-read" class="block px-4 py-2 hover:bg-white/10 transition rounded-t-lg">
+                        📌 Want to Read
+                    </a>
+                    <a href="/reading" class="block px-4 py-2 hover:bg-white/10 transition">
+                        📖 Reading
+                    </a>
+                    <a href="/completed" class="block px-4 py-2 hover:bg-white/10 transition">
+                        ✅ Completed
+                    </a>
+                    <a href="/library" class="block px-4 py-2 hover:bg-white/10 transition rounded-b-lg border-t border-white/10">
+                        📚 Library
+                    </a>
+                </div>
+            </div>
+            
+            <a href="/profile"       class="text-gray-300 hover:text-white transition">Profile</a>
+            <a href="/logout"        class="text-sm bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg transition">Logout</a>
+        </div>
+    </div>
+</nav>
+
+    <div class="max-w-7xl mx-auto px-6 py-12">
+        
+        <!-- Header Section -->
+        <div class="glass-dark card-container rounded-2xl p-8 mb-8 animate-fade-in-up">
+            <div class="flex items-center gap-6">
+                <div class="w-24 h-24 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white text-4xl font-bold shadow-lg">
+                    {{ session.get('username', 'U')[0].upper() }}
+                </div>
+                <div>
+                    <h1 class="text-4xl font-bold text-white dark-text mb-2">{{ session.get('username', 'User') }}</h1>
+                    <p class="text-gray-300 dark-subtext">{{ session.get('email', '') }}</p>
+                    <p class="text-sm text-purple-400 mt-2">Member since {{ session.get('created_at', 'Recently') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            
+            <!-- Total Books -->
+            <div class="glass-dark card-container stat-card rounded-xl p-6 animate-fade-in-up animate-delay-1">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-blue-500/20 rounded-lg">
+                        <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-bold text-white dark-text">{{ stats.total_books }}</span>
+                </div>
+                <h3 class="text-gray-300 dark-subtext font-semibold">Total Books</h3>
+                <p class="text-xs text-gray-400 dark-subtext-light mt-1">In your library</p>
+            </div>
+
+            <!-- Completed -->
+            <div class="glass-dark card-container stat-card rounded-xl p-6 animate-fade-in-up animate-delay-2">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-green-500/20 rounded-lg">
+                        <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-bold text-white dark-text">{{ stats.completed }}</span>
+                </div>
+                <h3 class="text-gray-300 dark-subtext font-semibold">Completed</h3>
+                <p class="text-xs text-gray-400 dark-subtext-light mt-1">Books finished</p>
+            </div>
+
+            <!-- Currently Reading -->
+            <div class="glass-dark card-container stat-card rounded-xl p-6 animate-fade-in-up animate-delay-3">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-yellow-500/20 rounded-lg">
+                        <svg class="w-8 h-8 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-bold text-white dark-text">{{ stats.reading }}</span>
+                </div>
+                <h3 class="text-gray-300 dark-subtext font-semibold">Reading</h3>
+                <p class="text-xs text-gray-400 dark-subtext-light mt-1">Currently reading</p>
+            </div>
+
+            <!-- Want to Read -->
+            <div class="glass-dark card-container stat-card rounded-xl p-6 animate-fade-in-up animate-delay-4">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="p-3 bg-purple-500/20 rounded-lg">
+                        <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                    </div>
+                    <span class="text-3xl font-bold text-white dark-text">{{ stats.want_to_read }}</span>
+                </div>
+                <h3 class="text-gray-300 dark-subtext font-semibold">Want to Read</h3>
+                <p class="text-xs text-gray-400 dark-subtext-light mt-1">In wishlist</p>
+            </div>
+
+        </div>
+
+        <!-- Reading Progress Chart -->
+        <div class="glass-dark card-container rounded-2xl p-8 mb-8">
+            <h2 class="text-2xl font-bold text-white dark-text mb-6">📊 Reading Progress</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                
+                <!-- Doughnut Chart -->
+                <div>
+                    <canvas id="readingChart"></canvas>
+                </div>
+
+                <!-- Progress Bars -->
+                <div class="space-y-6">
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-300 dark-subtext font-semibold">Completed</span>
+                            <span class="text-purple-400 font-bold">{{ stats.completed }}</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div class="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-1000" 
+                                 style="width: {{ (stats.completed / (stats.total_books if stats.total_books > 0 else 1) * 100)|int }}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-300 dark-subtext font-semibold">Currently Reading</span>
+                            <span class="text-purple-400 font-bold">{{ stats.reading }}</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div class="bg-gradient-to-r from-yellow-500 to-yellow-600 h-3 rounded-full transition-all duration-1000" 
+                                 style="width: {{ (stats.reading / (stats.total_books if stats.total_books > 0 else 1) * 100)|int }}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <span class="text-gray-300 dark-subtext font-semibold">Want to Read</span>
+                            <span class="text-purple-400 font-bold">{{ stats.want_to_read }}</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div class="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-1000" 
+                                 style="width: {{ (stats.want_to_read / (stats.total_books if stats.total_books > 0 else 1) * 100)|int }}%">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between mb-2">
+                            <a href="/liked" class="text-gray-300 dark-subtext font-semibold">Liked Books</a>
+                            <span class="text-purple-400 font-bold">{{ stats.liked_count }}</span>
+                        </div>
+                        <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                            <div class="bg-gradient-to-r from-pink-500 to-pink-600 h-3 rounded-full transition-all duration-1000" 
+                                 style="width: {{ (stats.liked_count / (stats.total_books if stats.total_books > 0 else 1) * 100)|int }}%">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        if (currentTheme === 'light') {
+            toggleTheme();
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        function toggleTheme() {
+            const isDark = body.classList.contains('dark-mode');
+            
+            if (isDark) {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                
+                document.querySelectorAll('.glass-dark').forEach(el => {
+                    el.classList.remove('glass-dark');
+                    el.classList.add('glass-light');
+                });
+                
+                document.querySelectorAll('.dark-text').forEach(el => {
+                    el.classList.add('text-gray-800');
+                    el.classList.remove('text-white');
+                });
+                
+                document.querySelectorAll('.dark-subtext').forEach(el => {
+                    el.classList.add('text-gray-600');
+                    el.classList.remove('text-gray-300');
+                });
+                
+                localStorage.setItem('theme', 'light');
+                
+                // Send to server
+                fetch('/update_theme', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'theme=light'
+                });
+            } else {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                
+                document.querySelectorAll('.glass-light').forEach(el => {
+                    el.classList.remove('glass-light');
+                    el.classList.add('glass-dark');
+                });
+                
+                document.querySelectorAll('.dark-text').forEach(el => {
+                    el.classList.remove('text-gray-800');
+                    el.classList.add('text-white');
+                });
+                
+                document.querySelectorAll('.dark-subtext').forEach(el => {
+                    el.classList.remove('text-gray-600');
+                    el.classList.add('text-gray-300');
+                });
+                
+                localStorage.setItem('theme', 'dark');
+                
+                // Send to server
+                fetch('/update_theme', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: 'theme=dark'
+                });
+            }
+        }
+
+        // Tab switching
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.add('hidden');
+            });
+            
+            // Remove active from all buttons
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active', 'bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white');
+                btn.classList.add('text-gray-300', 'hover:bg-white/10');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName).classList.remove('hidden');
+            
+            // Activate button
+            event.target.classList.add('active');
+            event.target.classList.remove('text-gray-300', 'hover:bg-white/10');
+        }
+
+        // Reading Progress Chart
+        const ctx = document.getElementById('readingChart').getContext('2d');
+        const readingChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Completed', 'Reading', 'Want to Read'],
+                datasets: [{
+                    data: [{{ stats.completed }}, {{ stats.reading }}, {{ stats.want_to_read }}],
+                    backgroundColor: [
+                        'rgba(34, 197, 94, 0.8)',
+                        'rgba(234, 179, 8, 0.8)',
+                        'rgba(168, 85, 247, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(34, 197, 94, 1)',
+                        'rgba(234, 179, 8, 1)',
+                        'rgba(168, 85, 247, 1)'
+                    ],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            color: '#e5e7eb',
+                            font: {
+                                size: 14
+                            },
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                label += context.parsed + ' books';
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

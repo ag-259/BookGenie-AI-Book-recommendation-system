@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ book.Title }} – BookGenie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.3);
+        }
+
+        /* Emotion bar fill animation */
+        @keyframes growBar {
+            from { width: 0; }
+            to  { width: var(--bar-width); }
+        }
+        .emotion-bar {
+            animation: growBar 0.6s ease-out forwards;
+        }
+        .like-btn-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .like-btn {
+            transition: all 0.2s ease;
+        }
+
+        .like-btn:active {
+            transform: scale(0.95);
+        }
+
+        .like-count {
+            transition: all 0.3s ease;
+        }
+
+        .like-count.updated {
+            animation: countBounce 0.4s ease;
+        }
+
+        @keyframes countBounce {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); color: rgb(139, 92, 246); }
+        }
+
+        .star-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            transition: transform 0.2s ease;
+        }
+
+        .star-btn:active {
+            transform: scale(0.9);
+        }
+
+        .star-icon {
+            transition: color 0.2s ease;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white min-h-screen">
+
+
+<!-- ─── NAVBAR (same as home.html) ─── -->
+<!-- ─── NAVBAR ─── -->
+<nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 px-6 py-4 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold hover:text-purple-300 transition">✨ BookGenie</a>
+        
+        <div class="flex gap-6 items-center">
+            <a href="/genie"         class="text-gray-300 hover:text-white transition">Genie</a>
+            <a href="/ask"           class="text-gray-300 hover:text-white transition">Ask AI</a>
+            <a href="/liked"         class="text-gray-300 hover:text-white transition">Liked</a>
+            
+            <!-- Dropdown for reading statuses -->
+            <div class="relative group">
+                <button class="text-gray-300 hover:text-white transition flex items-center gap-1">
+                    My Books
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                
+                <!-- Dropdown menu -->
+                <div class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <a href="/want-to-read" class="block px-4 py-2 hover:bg-white/10 transition rounded-t-lg">
+                        📌 Want to Read
+                    </a>
+                    <a href="/reading" class="block px-4 py-2 hover:bg-white/10 transition">
+                        📖 Reading
+                    </a>
+                    <a href="/completed" class="block px-4 py-2 hover:bg-white/10 transition">
+                        ✅ Completed
+                    </a>
+                    <a href="/library" class="block px-4 py-2 hover:bg-white/10 transition rounded-b-lg border-t border-white/10">
+                        📚 Library
+                    </a>
+                </div>
+            </div>
+            
+            <a href="/profile"       class="text-gray-300 hover:text-white transition">Profile</a>
+            <a href="/logout"        class="text-sm bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg transition">Logout</a>
+        </div>
+    </div>
+</nav>
+
+
+<!-- ─── BACK LINK ─── -->
+<div class="max-w-6xl mx-auto px-6 pt-6">
+    <a href="/" class="text-purple-400 hover:text-purple-300 transition text-sm inline-flex items-center gap-1">
+        ← Back to Search
+    </a>
+</div>
+
+
+<!-- ─── MAIN CARD ─── -->
+<div class="max-w-6xl mx-auto px-6 py-8">
+    <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
+        <div class="flex flex-col md:flex-row gap-8">
+
+            <!-- ── Book Cover ── -->
+            <div class="flex-shrink-0 flex flex-col items-center gap-4">
+                <img
+                    src="{{ book.large_thumbnail | default('/static/cover-not-found.jpg') }}"
+                    alt="{{ book.Title }}"
+                    class="w-64 h-96 object-cover rounded-lg shadow-2xl"
+                    onerror="this.src='/static/cover-not-found.jpg'"
+                >
+
+                <!-- Reading-status buttons (three real statuses mapped to /set_status) -->
+                <div class="flex flex-col gap-2 w-full">
+                    <form method="POST" action="/set_status/{{ book.unique_values }}/want_to_read">
+                        <button type="submit"
+                                class="w-full px-4 py-2 rounded-lg text-sm font-medium transition
+                                       {% if current_status == 'want_to_read' %}
+                                           bg-orange-600 hover:bg-orange-700
+                                       {% else %}
+                                           bg-white/10 hover:bg-orange-600/50
+                                       {% endif %}">
+                            📌 Want to Read
+                        </button>
+                    </form>
+
+                    <form method="POST" action="/set_status/{{ book.unique_values }}/readlist">
+                        <button type="submit"
+                                class="w-full px-4 py-2 rounded-lg text-sm font-medium transition
+                                       {% if current_status == 'reading' %}
+                                           bg-blue-600 hover:bg-blue-700
+                                       {% else %}
+                                           bg-white/10 hover:bg-blue-600/50
+                                       {% endif %}">
+                            📖 Currently Reading
+                        </button>
+                    </form>
+
+                    <form method="POST" action="/set_status/{{ book.unique_values }}/completed">
+                        <button type="submit"
+                                class="w-full px-4 py-2 rounded-lg text-sm font-medium transition
+                                       {% if current_status == 'completed' %}
+                                           bg-green-600 hover:bg-green-700
+                                       {% else %}
+                                           bg-white/10 hover:bg-green-600/50
+                                       {% endif %}">
+                            ✅ Completed
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+
+            <!-- ── Book Details ── -->
+            <div class="flex-1">
+
+                <!-- Title & Author -->
+                <h1 class="text-4xl font-bold mb-1">{{ book.Title }}</h1>
+                <p class="text-xl text-purple-300 mb-5">by {{ book.authors | default('Unknown Author') }}</p>
+
+                <!-- Meta row -->
+                <div class="flex flex-wrap gap-x-6 gap-y-2 text-sm mb-6">
+                    {% if book.simple_categories %}
+                    <p><span class="text-purple-400 font-semibold">Category:</span> {{ book.simple_categories }}</p>
+                    {% endif %}
+
+                    {% if book.num_pages and book.num_pages != '' %}
+                    <p><span class="text-purple-400 font-semibold">Pages:</span> {{ book.num_pages }}</p>
+                    {% endif %}
+
+                    {% if book.publisher and book.publisher != '' %}
+                    <p><span class="text-purple-400 font-semibold">Publisher:</span> {{ book.publisher }}</p>
+                    {% endif %}
+                </div>
+
+                <!-- Description -->
+                {% if book.description and book.description != '' %}
+                <div class="mb-6">
+                    <h3 class="font-semibold text-lg mb-2 text-purple-400">Description</h3>
+                    <p class="text-slate-300 leading-relaxed">{{ book.description }}</p>
+                </div>
+                {% endif %}
+
+                <!-- ── Action Buttons (Preview + Like) ── -->
+                 
+                <div class="flex flex-wrap gap-3 mb-8 items-start">
+
+                    {% if book.previewLink and book.previewLink != '' %}
+                    <a href="{{ book.previewLink }}" target="_blank" rel="noopener"
+                       class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition font-medium">
+                        📖 Preview Book
+                    </a>
+                    {% endif %}
+
+                    <!-- Like / Unlike -->
+                    <div class="like-btn-container">
+                        <button 
+                            onclick="toggleLikeWithCount({{ book.unique_values }})"
+                            id="like-btn-{{ book.unique_values }}"
+                            class="like-btn px-5 py-2 rounded-lg text-white font-medium transition
+                                {% if is_liked %}bg-red-600 hover:bg-red-700{% else %}bg-green-600 hover:bg-green-700{% endif %}"
+                            data-liked="{{ 'true' if is_liked else 'false' }}">
+                            <span id="like-icon-{{ book.unique_values }}">
+                                {% if is_liked %}💔 Unlike{% else %}❤️ Like{% endif %}
+                            </span>
+                        </button>
+                        
+                        <div id="like-count-{{ book.unique_values }}" class="like-count text-sm text-gray-400">
+                            <span id="count-value-{{ book.unique_values }}">{{ like_count if like_count > 0 else '' }}</span>
+                            <span id="count-text-{{ book.unique_values }}">
+                                {% if like_count > 0 %}like{{ 's' if like_count != 1 else '' }}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                    <!-- ─── RATING SYSTEM ─── -->
+                    <div class="mt-6 pt-6 border-t border-white/10">
+                        <h3 class="font-semibold text-lg mb-3 text-purple-400">⭐ Rate This Book</h3>
+                        
+                        <div class="flex items-center gap-6">
+                            <!-- Star Rating Input -->
+                            <div class="flex items-center gap-2">
+                                <div class="flex gap-1" id="star-rating">
+                                    {% for i in range(1, 6) %}
+                                    <button 
+                                        onclick="setRating({{ book.unique_values }}, {{ i }})"
+                                        onmouseover="hoverRating({{ i }})"
+                                        onmouseout="resetRating()"
+                                        class="star-btn text-3xl transition-all hover:scale-110"
+                                        data-rating="{{ i }}">
+                                        <span class="star-icon {% if user_rating and i <= user_rating %}text-yellow-400{% else %}text-gray-600{% endif %}">
+                                            {% if user_rating and i <= user_rating %}★{% else %}☆{% endif %}
+                                        </span>
+                                    </button>
+                                    {% endfor %}
+                                </div>
+                                
+                                <div id="rating-feedback" class="font-semibold text-lg mb-1 text-purple-400">
+                                    {% if user_rating %}
+                                        <span>Your rating: <span class="text-yellow-400 font-semibold">{{ user_rating }}/5</span></span>
+                                    {% else %}
+                                        <span>Click to rate</span class="text-yellow-400 font-semibold">
+                                    {% endif %}
+                                </div>
+                            </div>
+        
+                            <!-- Average Rating Display -->
+                            {% if rating_info.count > 0 %}
+                            <div class="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-lg">
+                                <span class="text-yellow-400 text-lg">★</span>
+                                <span class="font-semibold">{{ rating_info.average }}</span>
+                                <span class="text-gray-400 text-sm">({{ rating_info.count }} rating{{ 's' if rating_info.count != 1 else '' }})</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                <hr class="border-purple-400/30 my-3">
+
+
+                <!-- ── Emotion Scores ── -->
+                {% set emotions = [
+                    { 'key': 'joy',      'label': 'Joy',      'color': 'yellow',  'bg': 'bg-yellow-500/20',  'text': 'text-yellow-300',  'bar': 'bg-yellow-400' },
+                    { 'key': 'surprise', 'label': 'Surprise', 'color': 'pink',    'bg': 'bg-pink-500/20',    'text': 'text-pink-300',    'bar': 'bg-pink-400' },
+                    { 'key': 'anger',    'label': 'Anger',    'color': 'red',     'bg': 'bg-red-500/20',     'text': 'text-red-300',     'bar': 'bg-red-400' },
+                    { 'key': 'fear',     'label': 'Fear',     'color': 'purple',  'bg': 'bg-purple-500/20',  'text': 'text-purple-300',  'bar': 'bg-purple-400' },
+                    { 'key': 'sadness',  'label': 'Sadness',  'color': 'blue',    'bg': 'bg-blue-500/20',    'text': 'text-blue-300',    'bar': 'bg-blue-400' },
+                    { 'key': 'disgust',  'label': 'Disgust',  'color': 'teal',    'bg': 'bg-teal-500/20',    'text': 'text-teal-300',    'bar': 'bg-teal-400' },
+                    { 'key': 'neutral',  'label': 'Neutral',  'color': 'slate',   'bg': 'bg-slate-500/20',   'text': 'text-slate-300',   'bar': 'bg-slate-400' }
+                ] %}
+
+                <div class="mb-8">
+                    <h3 class="font-semibold text-lg mb-3 text-purple-400">🎭 Emotional Tone</h3>
+
+                    <!-- Percentage badges (7-col on desktop, 4 on tablet, 2 on mobile) -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-5">
+                        {% for e in emotions %}
+                        <div class="{{ e.bg }} rounded-lg p-3 text-center">
+                            <p class="text-xs {{ e.text }}">{{ e.label }}</p>
+                            <p class="text-lg font-bold">{{ "%.0f"|format(book[e.key] * 100) }}%</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Animated bar chart -->
+                    <div class="flex flex-col gap-2">
+                        {% for e in emotions %}
+                        {% set pct = (book[e.key] * 100) | round(1) %}
+                        <div class="flex items-center gap-3">
+                            <span class="text-xs w-16 text-right {{ e.text }}">{{ e.label }}</span>
+                            <div class="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                                <div class="h-full {{ e.bar }} rounded-full emotion-bar"
+                                     style="--bar-width: {{ pct }}%"></div>
+                            </div>
+                            <span class="text-xs w-10 text-gray-400">{{ pct }}%</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+
+                <!-- ── Purchase Links ── -->
+                <div>
+                    <h3 class="font-semibold text-lg mb-3 text-purple-400">💰 Buy This Book</h3>
+                    <div class="flex flex-wrap gap-3">
+                        <a href="https://www.amazon.in/s?k={{ book.Title | urlencode }}"
+                           target="_blank" rel="noopener"
+                           class="bg-yellow-500 hover:bg-yellow-600 text-black px-6 py-3 rounded-lg font-semibold transition">
+                            Amazon
+                        </a>
+                        <a href="https://www.flipkart.com/search?q={{ book.Title | urlencode }}"
+                           target="_blank" rel="noopener"
+                           class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold transition">
+                            Flipkart
+                        </a>
+                        <a href="https://www.google.com/search?q={{ (book.Title ~ ' ' ~ book.authors ~ ' book') | urlencode }}"
+                           target="_blank" rel="noopener"
+                           class="bg-slate-600 hover:bg-slate-700 text-white px-6 py-3 rounded-lg font-semibold transition">
+                            Google
+                        </a>
+                    </div>
+
+                    <!-- More Like This Section -->
+                    {% if similar_books and similar_books|length > 0 %}
+                    <div class="mt-12 pt-8 border-t border-white/10">
+                        <h3 class="text-2xl font-bold mb-6 text-purple-400">📚 More Like This</h3>
+                        
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                            {% for book in similar_books %}
+                            <a href="/book/{{ book.unique_values }}"
+                            class="block bg-black/40 rounded-xl overflow-hidden card-hover">
+                                
+                                <div class="relative aspect-[2/3] overflow-hidden bg-slate-800">
+                                    <img
+                                        src="{{ book.image if book.image else '/static/cover-not-found.jpg' }}"
+                                        alt="{{ book.Title }}"
+                                        class="w-full h-full object-cover"
+                                        onerror="this.src='/static/cover-not-found.jpg'"
+                                    >
+                                </div>
+                                
+                                <div class="p-3">
+                                    <h4 class="font-semibold text-xs line-clamp-2 mb-1">{{ book.Title }}</h4>
+                                    <p class="text-xs text-gray-400 truncate">{{ book.authors }}</p>
+                                </div>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div> <!-- end flex-1 details -->
+        </div>   <!-- end flex row -->
+    </div>       <!-- end card -->
+</div>           <!-- end max-w -->
+
+<script>
+async function toggleLikeWithCount(bookId) {
+    const btn = document.getElementById(`like-btn-${bookId}`);
+    const icon = document.getElementById(`like-icon-${bookId}`);
+    const countValue = document.getElementById(`count-value-${bookId}`);
+    const countText = document.getElementById(`count-text-${bookId}`);
+    const countContainer = document.getElementById(`like-count-${bookId}`);
+    
+    const isLiked = btn.dataset.liked === 'true';
+    
+    btn.disabled = true;
+    btn.classList.add('opacity-70');
+    
+    try {
+        const response = await fetch(`/api/toggle_like/${bookId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        
+        if (!response.ok) throw new Error('Failed to toggle like');
+        
+        const data = await response.json();
+        
+        // Update button
+        if (data.liked) {
+            btn.classList.remove('bg-green-600', 'hover:bg-green-700');
+            btn.classList.add('bg-red-600', 'hover:bg-red-700');
+            icon.textContent = '💔 Unlike';
+            btn.dataset.liked = 'true';
+        } else {
+            btn.classList.remove('bg-red-600', 'hover:bg-red-700');
+            btn.classList.add('bg-green-600', 'hover:bg-green-700');
+            icon.textContent = '❤️ Like';
+            btn.dataset.liked = 'false';
+        }
+        
+        // Update count
+        const count = data.like_count;
+        if (count > 0) {
+            countValue.textContent = count;
+            countText.textContent = count === 1 ? ' like' : ' likes';
+            countContainer.classList.add('updated');
+            setTimeout(() => countContainer.classList.remove('updated'), 400);
+        } else {
+            countValue.textContent = '';
+            countText.textContent = '';
+        }
+        
+        // Success animation
+        btn.classList.add('scale-105');
+        setTimeout(() => btn.classList.remove('scale-105'), 200);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to update. Please try again.');
+    } finally {
+        btn.disabled = false;
+        btn.classList.remove('opacity-70');
+    }
+}
+
+let currentUserRating = {{ user_rating if user_rating else 0 }};
+
+function hoverRating(rating) {
+    const stars = document.querySelectorAll('.star-icon');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.textContent = '★';
+            star.classList.add('text-yellow-400');
+            star.classList.remove('text-gray-600');
+        } else {
+            star.textContent = '☆';
+            star.classList.remove('text-yellow-400');
+            star.classList.add('text-gray-600');
+        }
+    });
+}
+
+function resetRating() {
+    const stars = document.querySelectorAll('.star-icon');
+    stars.forEach((star, index) => {
+        if (index < currentUserRating) {
+            star.textContent = '★';
+            star.classList.add('text-yellow-400');
+            star.classList.remove('text-gray-600');
+        } else {
+            star.textContent = '☆';
+            star.classList.remove('text-yellow-400');
+            star.classList.add('text-gray-600');
+        }
+    });
+}
+
+async function setRating(bookId, rating) {
+    try {
+        const response = await fetch(`/api/rate_book/${bookId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ rating: rating })
+        });
+        
+        if (!response.ok) throw new Error('Failed to set rating');
+        
+        const data = await response.json();
+        
+        // Update current rating
+        currentUserRating = rating;
+        
+        // Update feedback text
+        document.getElementById('rating-feedback').innerHTML = 
+            `<span>Your rating: <span class="text-yellow-400 font-semibold">${rating}/5</span></span>`;
+        
+        // Update stars
+        resetRating();
+        
+        // Update average rating if available
+        if (data.rating_info) {
+            // Reload page to show updated average (or update dynamically)
+            setTimeout(() => location.reload(), 500);
+        }
+        
+    } catch (error) {
+        console.error('Rating error:', error);
+        alert('Failed to save rating. Please try again.');
+    }
+}
+</script>
+<!-- ─── FOOTER ─── -->
+<footer class="mt-16 py-6 text-center text-gray-400 text-sm">
+    © 2026 BookGenie · Built with ✨
+</footer>
+
+</body>
+</html>

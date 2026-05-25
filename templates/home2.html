@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BookGenie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .scrollbar-hide {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(139, 92, 246, 0.5) transparent;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar-thumb {
+            background: rgba(139, 92, 246, 0.5);
+            border-radius: 4px;
+        }
+
+        .scrollbar-hide::-webkit-scrollbar-thumb:hover {
+            background: rgba(139, 92, 246, 0.7);
+        }
+
+        .card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-hover:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 30px rgba(139, 92, 246, 0.3);
+        }
+    </style>
+</head>
+
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white min-h-screen">
+
+<!-- ─── REUSABLE BOOK CARD MACRO ─── -->
+{% macro book_card(book) %}
+<a href="/book/{{ book.unique_values }}"
+   class="w-[220px] min-w-[220px] max-w-[220px] bg-black/40 rounded-xl overflow-hidden card-hover flex-shrink-0 block">
+
+    <img
+        src="{{ book.image if book.image else '/static/cover-not-found.jpg' }}"
+        alt="{{ book.Title or book.title or 'Book Cover' }}"
+        class="w-full h-60 object-cover"
+    >
+
+    <div class="p-4">
+        <h3 class="font-semibold text-sm line-clamp-2">
+            {{ book.Title or book.title or 'Untitled' }}
+        </h3>
+        <p class="text-sm text-gray-300 truncate">{{ book.authors or 'Unknown Author' }}</p>
+        {% if book.categories %}
+        <span class="inline-block mt-2 text-xs bg-purple-600/30 px-2 py-1 rounded">
+            {{ book.categories }}
+        </span>
+        {% endif %}
+    </div>
+</a>
+{% endmacro %}
+
+<!-- ─── REUSABLE HORIZONTAL SCROLL ROW MACRO ─── -->
+{% macro book_row(title, emoji, book_list) %}
+{% if book_list and book_list|length > 0 %}
+<div class="max-w-7xl mx-auto px-6 mt-16">
+    <h2 class="text-3xl font-bold mb-6">{{ emoji }} {{ title }}</h2>
+    <div class="flex gap-6 overflow-x-auto pb-6 scrollbar-hide">
+        {% for book in book_list %}
+            {{ book_card(book) }}
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endmacro %}
+
+
+<!-- ─── NAVBAR ─── -->
+<!-- ─── NAVBAR ─── -->
+<nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 px-6 py-4 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold hover:text-purple-300 transition">✨ BookGenie</a>
+        
+        <div class="flex gap-6 items-center">
+            <a href="/genie"         class="text-gray-300 hover:text-white transition">Genie</a>
+            <a href="/ask"           class="text-gray-300 hover:text-white transition">Ask AI</a>
+            <a href="/liked"         class="text-gray-300 hover:text-white transition">Liked</a>
+            
+            <!-- Dropdown for reading statuses -->
+            <div class="relative group">
+                <button class="text-gray-300 hover:text-white transition flex items-center gap-1">
+                    My Books
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                
+                <!-- Dropdown menu -->
+                <div class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <a href="/want-to-read" class="block px-4 py-2 hover:bg-white/10 transition rounded-t-lg">
+                        📌 Want to Read
+                    </a>
+                    <a href="/reading" class="block px-4 py-2 hover:bg-white/10 transition">
+                        📖 Reading
+                    </a>
+                    <a href="/completed" class="block px-4 py-2 hover:bg-white/10 transition">
+                        ✅ Completed
+                    </a>
+                    <a href="/library" class="block px-4 py-2 hover:bg-white/10 transition rounded-b-lg border-t border-white/10">
+                        📚 Library
+                    </a>
+                </div>
+            </div>
+            
+            <a href="/profile"       class="text-gray-300 hover:text-white transition">Profile</a>
+            <a href="/logout"        class="text-sm bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg transition">Logout</a>
+        </div>
+    </div>
+</nav>
+
+
+<!-- ─── SEARCH BAR ─── -->
+<div class="max-w-5xl mx-auto pt-10 px-6">
+    <form method="POST" class="flex flex-col md:flex-row gap-4">
+
+        <input
+            type="text"
+            name="query"
+            value="{{ search_query }}"
+            placeholder="Search by title, story, keywords..."
+            class="flex-1 px-4 py-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-purple-500"
+            required
+        >
+
+        <select name="genre" class="px-4 py-3 rounded-lg text-black focus:outline-none focus:ring-2 focus:ring-purple-500">
+            {% for g in genres %}
+            <option value="{{ g }}" {% if g == selected_genre %}selected{% endif %}>
+                {{ g }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <button type="submit"
+                class="px-6 py-3 bg-blue-600 rounded-lg hover:bg-blue-700 transition font-medium">
+            🔍 Search
+        </button>
+    </form>
+
+    <!-- ─── TRENDING & HISTORY PILLS ─── -->
+    <div class="flex flex-wrap gap-3 mt-4">
+
+        {% if trending_searches %}
+        <span class="text-xs text-gray-500 self-center">🔥 Trending:</span>
+        {% for term in trending_searches %}
+            <button type="button"
+                    onclick="quickSearch('{{ term.query | e }}')"
+                    class="text-xs bg-white/10 hover:bg-purple-600/40 px-3 py-1 rounded-full transition cursor-pointer">
+                {{ term.query }}
+            </button>
+        {% endfor %}
+        {% endif %}
+
+        {% if search_history %}
+        <span class="text-xs text-gray-500 self-center ml-4">🕐 Recent:</span>
+        {% for term in search_history %}
+            <button type="button"
+                    onclick="quickSearch('{{ term.query | e }}')"
+                    class="text-xs bg-white/5 hover:bg-white/15 px-3 py-1 rounded-full transition cursor-pointer text-gray-300">
+                {{ term.query }}
+            </button>
+        {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+
+<!-- ─── SEARCH RESULTS ─── -->
+{% if books and books|length > 0 %}
+{{ book_row("Search Results", "🔍", books) }}
+{% elif search_query %}
+<div class="max-w-7xl mx-auto px-6 mt-10">
+    <p class="text-center text-gray-400">No books found for "<span class="text-purple-300">{{ search_query }}</span>". Try a different keyword or genre.</p>
+</div>
+{% endif %}
+
+
+<!-- ─── PERSONALIZED RECOMMENDATIONS ─── -->
+{{ book_row("Recommended For You", "🎯", personalized) }}
+
+<!-- ─── HIGHEST RATED BOOKS ─── -->
+{{ book_row("Highest Rated Books", "⭐", highest_rated) }}
+<!-- ─── COLLABORATIVE RECOMMENDATIONS ─── -->
+{{ book_row("Readers Like You Also Enjoyed", "👥", collaborative) }}
+
+
+<!-- ─── CATEGORY BROWSING ROWS ─── -->
+{{ book_row("Fiction",                   "📚", category_books.get('Fiction', []))                   }}
+{{ book_row("Juvenile Fiction",          "🧒", category_books.get('Juvenile Fiction', []))          }}
+{{ book_row("History",                   "📜", category_books.get('History', []))                   }}
+{{ book_row("Biography & Autobiography", "👤", category_books.get('Biography & Autobiography', [])) }}
+{{ book_row("Comics & Graphic Novels",   "💥", category_books.get('Comics & Graphic Novels', []))   }}
+{{ book_row("Poetry",                    "✍️", category_books.get('Poetry', []))                    }}
+{{ book_row("Nature",                    "🌿", category_books.get('Nature', []))                    }}
+{{ book_row("Travel",                    "✈️", category_books.get('Travel', []))                    }}
+
+
+<!-- ─── FOOTER ─── -->
+<footer class="mt-20 py-6 text-center text-gray-400 text-sm">
+    © 2026 BookGenie · Built with ✨
+</footer>
+
+
+<!-- ─── QUICK-SEARCH SCRIPT ─── -->
+<script>
+    function quickSearch(term) {
+        const input = document.querySelector('input[name="query"]');
+        if (input) {
+            input.value = term;
+            // Submit the parent form
+            input.closest('form').submit();
+        }
+    }
+</script>
+
+</body>
+</html>

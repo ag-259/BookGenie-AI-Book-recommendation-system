@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - BookGenie</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .dark-mode {
+            background: linear-gradient(135deg, #1e293b 0%, #4c1d95 50%, #1e293b 100%);
+        }
+        .light-mode {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 50%, #fce7f3 100%);
+        }
+        .glass-dark {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .glass-light {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        /* Fix for input visibility */
+        .input-dark {
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+        }
+        .input-dark::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .input-light {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.2);
+            color: #1f2937;
+        }
+        .input-light::placeholder {
+            color: rgba(0, 0, 0, 0.4);
+        }
+    </style>
+</head>
+<body class="dark-mode min-h-screen flex items-center justify-center transition-all duration-300">
+
+    <!-- Theme Toggle Button -->
+    <button id="themeToggle" class="fixed top-6 right-6 z-50 p-3 rounded-full glass-dark hover:scale-110 transition-transform">
+        <svg id="sunIcon" class="w-6 h-6 text-yellow-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+        </svg>
+        <svg id="moonIcon" class="w-6 h-6 text-purple-900 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+        </svg>
+    </button>
+
+    <div class="w-full max-w-md px-6">
+        <!-- Logo -->
+        <div class="text-center mb-8">
+            <img src="/static/bookgenie-logo.png" alt="BookGenie Logo" class="w-48 h-48 mx-auto mb-4 drop-shadow-2xl animate-pulse">
+            <h1 class="text-3xl font-bold text-white dark-text mb-2">Welcome Back!</h1>
+            <p class="text-gray-300 dark-subtext">Login to continue your reading journey</p>
+        </div>
+
+        <!-- Login Form -->
+        <div class="glass-dark card-container rounded-2xl p-8 shadow-2xl">
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-4 p-4 rounded-lg {% if category == 'error' %}bg-red-500/20 text-red-200 border border-red-500/50{% else %}bg-green-500/20 text-green-200 border border-green-500/50{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="/login" class="space-y-4">
+                
+                <!-- Email -->
+                <div>
+                    <label class="block text-white dark-text text-sm font-semibold mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                        </svg>
+                        Email
+                    </label>
+                    <input 
+                        type="email" 
+                        name="email" 
+                        required
+                        class="w-full px-4 py-3 rounded-lg input-dark input-field focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                        placeholder="your.email@example.com"
+                    >
+                </div>
+
+                <!-- Password -->
+                <div>
+                    <label class="block text-white dark-text text-sm font-semibold mb-2">
+                        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                        </svg>
+                        Password
+                    </label>
+                    <div class="relative">
+                        <input 
+                            type="password" 
+                            name="password" 
+                            id="passwordInput"
+                            required
+                            class="w-full px-4 py-3 pr-12 rounded-lg input-dark input-field focus:outline-none focus:ring-2 focus:ring-purple-500 transition"
+                            placeholder="Enter your password"
+                        >
+                        <button 
+                            type="button" 
+                            id="togglePassword"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 focus:outline-none transition"
+                            onclick="togglePasswordVisibility()"
+                        >
+                            <!-- Eye open icon -->
+                            <svg id="eyeOpen" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                            </svg>
+                            <!-- Eye closed icon -->
+                            <svg id="eyeClosed" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 4.411m0 0L21 21"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center text-gray-300 dark-subtext cursor-pointer">
+                        <input type="checkbox" name="remember" class="mr-2 rounded text-purple-600 focus:ring-purple-500">
+                        <span class="text-sm">Remember me</span>
+                    </label>
+                </div>
+
+                <!-- Submit Button -->
+                <button 
+                    type="submit"
+                    class="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold py-3 rounded-lg transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                    Login
+                </button>
+            </form>
+
+            <!-- Register Link -->
+            <div class="mt-6 text-center">
+                <p class="text-gray-300 dark-subtext">
+                    Don't have an account? 
+                    <a href="/register" class="text-purple-400 hover:text-purple-300 font-semibold transition">Register here</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const body = document.body;
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const cardContainer = document.querySelector('.card-container');
+        
+        const currentTheme = localStorage.getItem('theme') || 'dark';
+        if (currentTheme === 'light') {
+            toggleTheme();
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        function toggleTheme() {
+            const isDark = body.classList.contains('dark-mode');
+            
+            if (isDark) {
+                body.classList.remove('dark-mode');
+                body.classList.add('light-mode');
+                cardContainer.classList.remove('glass-dark');
+                cardContainer.classList.add('glass-light');
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                
+                document.querySelectorAll('.dark-text').forEach(el => {
+                    el.classList.add('text-gray-800');
+                    el.classList.remove('text-white');
+                });
+                document.querySelectorAll('.dark-subtext').forEach(el => {
+                    el.classList.add('text-gray-600');
+                    el.classList.remove('text-gray-300', 'text-gray-400');
+                });
+                document.querySelectorAll('.input-field').forEach(el => {
+                    el.classList.remove('input-dark');
+                    el.classList.add('input-light');
+                });
+                
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.remove('light-mode');
+                body.classList.add('dark-mode');
+                cardContainer.classList.remove('glass-light');
+                cardContainer.classList.add('glass-dark');
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                
+                document.querySelectorAll('.dark-text').forEach(el => {
+                    el.classList.remove('text-gray-800');
+                    el.classList.add('text-white');
+                });
+                document.querySelectorAll('.dark-subtext').forEach(el => {
+                    el.classList.remove('text-gray-600');
+                    el.classList.add('text-gray-300');
+                });
+                document.querySelectorAll('.input-field').forEach(el => {
+                    el.classList.remove('input-light');
+                    el.classList.add('input-dark');
+                });
+                
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+    </script>
+    <script>
+        function togglePasswordVisibility() {
+    const input = document.getElementById('passwordInput');
+    const eyeOpen = document.getElementById('eyeOpen');
+    const eyeClosed = document.getElementById('eyeClosed');
+
+    if (input.type === 'password') {
+        input.type = 'text';
+        eyeOpen.classList.add('hidden');
+        eyeClosed.classList.remove('hidden');
+    } else {
+        input.type = 'password';
+        eyeOpen.classList.remove('hidden');
+        eyeClosed.classList.add('hidden');
+    }
+}
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookGenie - Semantic Search</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .card-hover {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(139, 92, 246, 0.4);
+        }
+
+        /* Smooth fade-in for results */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white min-h-screen">
+
+
+<!-- ─── NAVBAR (consistent with home.html) ─── -->
+<!-- ─── NAVBAR ─── -->
+<nav class="bg-black/30 backdrop-blur-lg border-b border-white/10 px-6 py-4 sticky top-0 z-10">
+    <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <a href="/" class="text-2xl font-bold hover:text-purple-300 transition">✨ BookGenie</a>
+        
+        <div class="flex gap-6 items-center">
+            <a href="/genie"         class="text-gray-300 hover:text-white transition">Genie</a>
+            <a href="/ask"           class="text-gray-300 hover:text-white transition">Ask AI</a>
+
+            <a href="/liked"         class="text-gray-300 hover:text-white transition">Liked</a>
+            
+            <!-- Dropdown for reading statuses -->
+            <div class="relative group">
+                <button class="text-gray-300 hover:text-white transition flex items-center gap-1">
+                    My Books
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                
+                <!-- Dropdown menu -->
+                <div class="absolute right-0 mt-2 w-48 bg-slate-800 rounded-lg shadow-xl border border-white/10 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
+                    <a href="/want-to-read" class="block px-4 py-2 hover:bg-white/10 transition rounded-t-lg">
+                        📌 Want to Read
+                    </a>
+                    <a href="/reading" class="block px-4 py-2 hover:bg-white/10 transition">
+                        📖 Reading
+                    </a>
+                    <a href="/completed" class="block px-4 py-2 hover:bg-white/10 transition">
+                        ✅ Completed
+                    </a>
+                    <a href="/library" class="block px-4 py-2 hover:bg-white/10 transition rounded-b-lg border-t border-white/10">
+                        📚 Library
+                    </a>
+                </div>
+            </div>
+            
+            <a href="/profile"       class="text-gray-300 hover:text-white transition">Profile</a>
+            <a href="/logout"        class="text-sm bg-white/10 hover:bg-white/20 px-3 py-1 rounded-lg transition">Logout</a>
+        </div>
+    </div>
+</nav>
+
+
+<!-- ─── HEADER ─── -->
+<header class="max-w-7xl mx-auto px-6 pt-10 pb-6">
+    <h1 class="text-5xl font-bold text-center bg-gradient-to-r from-purple-400 via-pink-400 to-purple-400 bg-clip-text text-transparent">
+        🧞 Semantic Book Genie
+    </h1>
+    <p class="text-center text-slate-300 mt-3 text-lg">
+        Describe what you're looking for — I'll find the perfect book ✨
+    </p>
+</header>
+
+
+<!-- ─── SEARCH SECTION ─── -->
+<section class="max-w-4xl mx-auto px-6 py-8">
+    <div class="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10 shadow-2xl">
+
+        <!-- Query Input -->
+        <div class="mb-6">
+            <label for="queryInput" class="block text-sm font-semibold mb-2 text-purple-300">
+                📝 Describe the book you're looking for
+            </label>
+            <textarea
+                id="queryInput"
+                rows="3"
+                placeholder="e.g., A mystery novel with a strong female detective, set in Victorian England..."
+                class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-purple-500/30 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 focus:outline-none text-white placeholder-slate-400 resize-none"
+            ></textarea>
+        </div>
+
+        <!-- Filters Row -->
+        <div class="grid md:grid-cols-2 gap-6 mb-6">
+
+            <!-- Category -->
+            <div>
+                <label for="categorySelect" class="block text-sm font-semibold mb-2 text-purple-300">
+                    📚 Category
+                </label>
+                <select
+                    id="categorySelect"
+                    class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-purple-500/30 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 focus:outline-none text-white"
+                >
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- Tone -->
+            <div>
+                <label for="toneSelect" class="block text-sm font-semibold mb-2 text-purple-300">
+                    🎭 Emotional Tone
+                </label>
+                <select
+                    id="toneSelect"
+                    class="w-full px-4 py-3 rounded-lg bg-slate-800/50 border border-purple-500/30 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/50 focus:outline-none text-white"
+                >
+                    {% for tone in tones %}
+                    <option value="{{ tone }}">{{ tone }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <!-- Search Button -->
+        <button
+            onclick="searchBooks()"
+            class="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 px-6 py-4 rounded-lg font-bold text-lg transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-lg hover:shadow-purple-500/50"
+        >
+            🔮 Find My Perfect Books
+        </button>
+    </div>
+</section>
+
+
+<!-- ─── LOADING SPINNER ─── -->
+<div id="loading" class="hidden text-center py-12">
+    <div class="inline-block animate-spin rounded-full h-16 w-16 border-4 border-purple-500 border-t-transparent"></div>
+    <p class="mt-4 text-slate-300 text-lg">Searching through thousands of books...</p>
+</div>
+
+
+<!-- ─── RESULTS SECTION ─── -->
+<section class="max-w-7xl mx-auto px-6 pb-12">
+    <div id="resultsHeader" class="hidden mb-8">
+        <h2 class="text-3xl font-bold">✨ Your Recommendations</h2>
+        <p class="text-slate-400 mt-2">Found <span id="resultCount" class="text-purple-400 font-semibold">0</span> books matching your search</p>
+    </div>
+
+    <!-- Results Grid -->
+    <div id="results" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6"></div>
+
+    <!-- Empty State -->
+    <div id="emptyState" class="hidden text-center py-16">
+        <div class="text-6xl mb-4">📚</div>
+        <p class="text-xl text-slate-400 mb-2">No books found</p>
+        <p class="text-slate-500">Try different search terms, category, or tone</p>
+    </div>
+</section>
+
+
+<!-- ─── FOOTER ─── -->
+<footer class="mt-20 py-6 text-center text-gray-400 text-sm">
+    © 2026 BookGenie · Powered by AI ✨
+</footer>
+
+
+<!-- ─── JAVASCRIPT ─── -->
+<script>
+    async function searchBooks() {
+        const query = document.getElementById('queryInput').value.trim();
+        const category = document.getElementById('categorySelect').value;
+        const tone = document.getElementById('toneSelect').value;
+
+        if (!query) {
+            alert('Please describe what you\'re looking for');
+            document.getElementById('queryInput').focus();
+            return;
+        }
+
+        // Show loading, hide everything else
+        document.getElementById('loading').classList.remove('hidden');
+        document.getElementById('results').innerHTML = '';
+        document.getElementById('resultsHeader').classList.add('hidden');
+        document.getElementById('emptyState').classList.add('hidden');
+
+        try {
+            const params = new URLSearchParams({ query, category, tone });
+            const response = await fetch(`/api/recommend?${params}`);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const books = await response.json();
+
+            // Hide loading
+            document.getElementById('loading').classList.add('hidden');
+
+            if (books.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+                return;
+            }
+
+            // Show results header with count
+            document.getElementById('resultCount').textContent = books.length;
+            document.getElementById('resultsHeader').classList.remove('hidden');
+
+            // Render book cards
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = books.map((book, index) => `
+                <a href="/book/${book.unique_values}"
+                   class="block bg-black/40 rounded-xl overflow-hidden card-hover fade-in"
+                   style="animation-delay: ${index * 0.05}s">
+                    
+                    <!-- Cover Image -->
+                    <div class="relative aspect-[2/3] overflow-hidden bg-slate-800">
+                        <img
+                            src="${escapeHtml(book.thumbnail)}"
+                            alt="${escapeHtml(book.title)}"
+                            class="w-full h-full object-cover"
+                            onerror="this.src='https://via.placeholder.com/200x300?text=No+Cover'"
+                        >
+                        <!-- Hover Overlay -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300 flex items-end p-3">
+                            <div>
+                                <p class="text-xs font-bold line-clamp-2 mb-1">${escapeHtml(book.title)}</p>
+                                <p class="text-xs text-slate-300 line-clamp-1">${escapeHtml(book.authors)}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Card Footer (always visible) -->
+                    <div class="p-3">
+                        <h3 class="font-semibold text-sm line-clamp-2 mb-1">${escapeHtml(book.title)}</h3>
+                        <p class="text-xs text-gray-400 truncate">${escapeHtml(book.authors)}</p>
+                        ${book.category ? `
+                            <span class="inline-block mt-2 text-xs bg-purple-600/30 px-2 py-1 rounded">
+                                ${escapeHtml(book.category)}
+                            </span>
+                        ` : ''}
+                    </div>
+                </a>
+            `).join('');
+
+            // Smooth scroll to results
+            setTimeout(() => {
+                document.getElementById('resultsHeader').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 200);
+
+        } catch (error) {
+            document.getElementById('loading').classList.add('hidden');
+            alert('Error fetching recommendations. Please try again.');
+            console.error('Search error:', error);
+        }
+    }
+
+    // HTML escape helper to prevent XSS
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Allow Enter key to search (Shift+Enter for new line in textarea)
+    document.getElementById('queryInput').addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            searchBooks();
+        }
+    });
+
+    // Auto-focus the query input on page load
+    window.addEventListener('DOMContentLoaded', () => {
+        document.getElementById('queryInput').focus();
+    });
+</script>
+
+</body>
+</html>
